@@ -11,15 +11,30 @@ const port = process.env.PORT ? process.env.PORT : "3000"
 
 const methodOverride = require("method-override")
 const morgan = require("morgan")
-
+const session = require("express-session")
+const passUserToView = require("./middleware/pass-user-to-view")
+const isSignedIn = require("./middleware/is-signed-in")
 //Use Middlewares
 app.use(express.urlencoded({ extended: false }))
 app.use(methodOverride("_method"))
 app.use(morgan("dev"))
 
+//Session Configuration
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+  })
+)
+app.use(passUserToView)
 //Root Route
 app.get("/", async (req, res) => {
   res.render("index.ejs")
+})
+
+app.get("/vip-lounge", isSignedIn, (req, res) => {
+  res.send(`Welcome to the party!${req.session.user.username}`)
 })
 
 const authRouter = require("./routes/auth")
